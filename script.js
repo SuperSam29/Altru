@@ -79,33 +79,28 @@ async function checkAvailability(startDate, endDate) {
  */
 async function checkPropertyAvailability(property, start, end) {
     try {
-        console.log(`Checking availability for ${property.name} from ${start.format('YYYY-MM-DD')} to ${end.format('YYYY-MM-DD')}`);
-        
-        // For demo purposes, always use simulated data
-        // In production, you would use the commented-out fetch code
-        /*
-        // Fetch the iCal data from the Airbnb URL with CORS proxy
-        const corsProxy = "https://cors-anywhere.herokuapp.com/";
-        const icalUrl = property.icalUrl;
+        // Attempt to fetch the iCal data from Airbnb
+        // Note: Direct fetching may fail due to CORS restrictions
+        let icalText;
         
         try {
-            const response = await fetch(corsProxy + icalUrl);
+            // Try fetching without a proxy first
+            console.log(`Fetching iCal data for ${property.name} from ${property.icalUrl}`);
+            const response = await fetch(property.icalUrl);
             icalText = await response.text();
+            console.log(`Successfully fetched iCal data for ${property.name}`);
         } catch (fetchError) {
-            console.error(`Error fetching iCal data: ${fetchError.message}`);
+            console.error(`Error fetching iCal data for ${property.name}: ${fetchError.message}`);
+            // Fallback to simulated data only if fetch fails
+            console.log(`Using fallback data for ${property.name}`);
             icalText = getSimulatedIcalData(property.name);
         }
-        */
-        
-        // Always use simulated data for demo purposes
-        const icalText = getSimulatedIcalData(property.name);
         
         // Parse the iCal data
         const jcalData = ICAL.parse(icalText);
         const comp = new ICAL.Component(jcalData);
         const events = comp.getAllSubcomponents("vevent");
         
-        // Log for debugging
         console.log(`Found ${events.length} events for ${property.name}`);
         
         // Check if the requested date range overlaps with any booked periods
@@ -121,16 +116,14 @@ async function checkPropertyAvailability(property, start, end) {
                 const eventStart = moment(icalEvent.startDate.toJSDate());
                 const eventEnd = moment(icalEvent.endDate.toJSDate());
                 
-                console.log(`Checking event: ${eventStart.format('YYYY-MM-DD')} to ${eventEnd.format('YYYY-MM-DD')}`);
-                
                 // If there's any overlap between the requested dates and booked dates,
                 // the property is not available
                 if (start.isBefore(eventEnd) && end.isAfter(eventStart)) {
-                    console.log(`Conflict found for ${property.name}`);
+                    console.log(`Conflict found for ${property.name}: ${eventStart.format('YYYY-MM-DD')} to ${eventEnd.format('YYYY-MM-DD')}`);
                     return false;
                 }
             } catch (eventError) {
-                console.error("Error processing calendar event:", eventError);
+                console.error("Error processing event:", eventError);
                 continue;
             }
         }
@@ -140,8 +133,7 @@ async function checkPropertyAvailability(property, start, end) {
         return true;
     } catch (error) {
         console.error(`Error checking availability for ${property.name}:`, error);
-        // For demo purposes, assume property is available if there's an error
-        return true;
+        throw error;
     }
 }
 
