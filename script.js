@@ -69,12 +69,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Initialize Flatpickr calendars
 function initializeCalendars() {
-    // Initialize Flatpickr for check-in date
-    window.checkInPicker = flatpickr(checkInDateInput, {
+    const calendarConfig = {
         minDate: "today",
         dateFormat: "Y-m-d",
         altInput: true,
         altFormat: "F j, Y",
+        static: true, // Helps with positioning
+        disableMobile: true, // Use the same UI on all devices
+        appendTo: document.querySelector('.container') // Control where calendar appears
+    };
+    
+    // Initialize Flatpickr for check-in date
+    window.checkInPicker = flatpickr(checkInDateInput, {
+        ...calendarConfig,
         onChange: function(selectedDates) {
             if (selectedDates.length > 0) {
                 selectedCheckInDate = selectedDates[0];
@@ -117,10 +124,7 @@ function initializeCalendars() {
 
     // Initialize Flatpickr for check-out date
     window.checkOutPicker = flatpickr(checkOutDateInput, {
-        minDate: "today",
-        dateFormat: "Y-m-d",
-        altInput: true,
-        altFormat: "F j, Y",
+        ...calendarConfig,
         onChange: function(selectedDates) {
             if (selectedDates.length > 0) {
                 selectedCheckOutDate = selectedDates[0];

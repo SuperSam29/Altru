@@ -27,7 +27,7 @@ body {
     background-color: white;
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
-    height: 600px;
+    height: 500px;
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -36,11 +36,13 @@ body {
 .booking-widget {
     background-color: white;
     border-radius: var(--border-radius);
-    margin-bottom: 30px;
+    margin-bottom: 20px;
     box-shadow: var(--box-shadow);
-    overflow: hidden;
+    overflow: visible;
     transition: var(--transition);
     flex-shrink: 0;
+    position: relative;
+    z-index: 10;
 }
 
 .booking-widget:hover {
@@ -165,7 +167,7 @@ input[type="text"]:focus {
     background-color: #f9fafc;
     border-radius: var(--border-radius);
     padding: 25px;
-    height: 300px;
+    height: 260px;
     overflow-y: auto;
     transition: var(--transition);
     opacity: 0;
@@ -285,6 +287,9 @@ input[type="text"]:focus {
     border-radius: var(--border-radius);
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
     padding: 10px;
+    position: absolute !important;
+    top: auto !important;
+    margin-top: 2px;
 }
 
 .flatpickr-months .flatpickr-month {
@@ -306,10 +311,20 @@ input[type="text"]:focus {
     background-color: #f0f4ff;
 }
 
+/* Fix for calendar overflow */
+.flatpickr-calendar.open {
+    z-index: 9999;
+    display: inline-block;
+    max-height: 320px;
+    overflow: auto;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
 @media (max-width: 768px) {
     .container {
-        margin: 20px 10px;
-        padding: 20px;
+        margin: 10px;
+        padding: 15px;
+        height: 480px;
     }
     
     .date-inputs {
@@ -327,5 +342,19 @@ input[type="text"]:focus {
     
     .property-list {
         grid-template-columns: 1fr;
+    }
+    
+    /* Fix for calendar on mobile */
+    .flatpickr-calendar.open {
+        left: 50% !important;
+        transform: translateX(-50%);
+        right: auto !important;
+        width: 300px;
+    }
+    
+    /* Add additional styles for results container on mobile */
+    .results-container {
+        padding: 15px;
+        height: 240px; /* Smaller height on mobile */
     }
 } 
