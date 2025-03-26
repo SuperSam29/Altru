@@ -79,69 +79,65 @@ async function checkAvailability(startDate, endDate) {
  */
 async function checkPropertyAvailability(property, start, end) {
     try {
-        // Fetch the iCal data from the Airbnb URL
-        // Use a CORS proxy to avoid cross-origin issues
+        console.log(`Checking availability for ${property.name} from ${start.format('YYYY-MM-DD')} to ${end.format('YYYY-MM-DD')}`);
+        
+        // For demo purposes, always use simulated data
+        // In production, you would use the commented-out fetch code
+        /*
+        // Fetch the iCal data from the Airbnb URL with CORS proxy
         const corsProxy = "https://cors-anywhere.herokuapp.com/";
         const icalUrl = property.icalUrl;
         
-        let icalText;
-        
         try {
-            // Use the CORS proxy in the fetch URL
             const response = await fetch(corsProxy + icalUrl);
             icalText = await response.text();
         } catch (fetchError) {
             console.error(`Error fetching iCal data: ${fetchError.message}`);
-            console.log("Falling back to simulated data for demo purposes");
-            // If fetch fails (likely due to CORS), fall back to simulated data
             icalText = getSimulatedIcalData(property.name);
         }
+        */
         
-        try {
-            // Parse the iCal data
-            const jcalData = ICAL.parse(icalText);
-            const comp = new ICAL.Component(jcalData);
-            const events = comp.getAllSubcomponents("vevent");
-            
-            // Log for debugging
-            console.log(`Found ${events.length} events for ${property.name}`);
-            
-            // Check if the requested date range overlaps with any booked periods
-            for (const event of events) {
-                try {
-                    const icalEvent = new ICAL.Event(event);
-                    
-                    if (!icalEvent.startDate || !icalEvent.endDate) {
-                        console.warn("Event missing start or end date, skipping");
-                        continue;
-                    }
-                    
-                    const eventStart = moment(icalEvent.startDate.toJSDate());
-                    const eventEnd = moment(icalEvent.endDate.toJSDate());
-                    
-                    console.log(`Checking event: ${eventStart.format('YYYY-MM-DD')} to ${eventEnd.format('YYYY-MM-DD')}`);
-                    
-                    // If there's any overlap between the requested dates and booked dates,
-                    // the property is not available
-                    if (start.isBefore(eventEnd) && end.isAfter(eventStart)) {
-                        console.log(`Conflict found for ${property.name}`);
-                        return false;
-                    }
-                } catch (eventError) {
-                    console.error("Error processing calendar event:", eventError);
-                    // Continue to next event if there's an error with this one
+        // Always use simulated data for demo purposes
+        const icalText = getSimulatedIcalData(property.name);
+        
+        // Parse the iCal data
+        const jcalData = ICAL.parse(icalText);
+        const comp = new ICAL.Component(jcalData);
+        const events = comp.getAllSubcomponents("vevent");
+        
+        // Log for debugging
+        console.log(`Found ${events.length} events for ${property.name}`);
+        
+        // Check if the requested date range overlaps with any booked periods
+        for (const event of events) {
+            try {
+                const icalEvent = new ICAL.Event(event);
+                
+                if (!icalEvent.startDate || !icalEvent.endDate) {
+                    console.warn("Event missing start or end date, skipping");
                     continue;
                 }
+                
+                const eventStart = moment(icalEvent.startDate.toJSDate());
+                const eventEnd = moment(icalEvent.endDate.toJSDate());
+                
+                console.log(`Checking event: ${eventStart.format('YYYY-MM-DD')} to ${eventEnd.format('YYYY-MM-DD')}`);
+                
+                // If there's any overlap between the requested dates and booked dates,
+                // the property is not available
+                if (start.isBefore(eventEnd) && end.isAfter(eventStart)) {
+                    console.log(`Conflict found for ${property.name}`);
+                    return false;
+                }
+            } catch (eventError) {
+                console.error("Error processing calendar event:", eventError);
+                continue;
             }
-            
-            // If we get here, there are no conflicting bookings
-            console.log(`${property.name} is available for the selected dates`);
-            return true;
-        } catch (parseError) {
-            console.error("Error parsing iCal data:", parseError);
-            // For demo purposes, assume property is available if parsing fails
-            return true;
         }
+        
+        // If we get here, there are no conflicting bookings
+        console.log(`${property.name} is available for the selected dates`);
+        return true;
     } catch (error) {
         console.error(`Error checking availability for ${property.name}:`, error);
         // For demo purposes, assume property is available if there's an error
@@ -203,61 +199,51 @@ function showError(message) {
 function getSimulatedIcalData(propertyName) {
     console.log(`Generating simulated data for ${propertyName}`);
     
-    // Generate some sample iCal data with random bookings
+    // Generate some sample iCal data with minimal bookings
     let icalData = `BEGIN:VCALENDAR
 PRODID:-//Airbnb Inc//Airbnb Calendar 1.0//EN
 VERSION:2.0
 CALSCALE:GREGORIAN`;
 
-    // Generate some sample bookings (different for each property)
-    const today = moment();
+    // Very limited bookings - only specific holiday dates
     let bookings = [];
     
-    // For demo purposes, only add a single booking per property
-    // with very specific dates so most user selections will show availability
     if (propertyName === "Oasis") {
-        // Oasis has a booking only on December 24-26, 2024
-        const christmasEve = moment("2024-12-24");
+        // Only booked for Christmas 2024
         bookings.push({
-            start: christmasEve,
-            end: christmasEve.clone().add(2, 'days')
+            start: moment("2024-12-24"),
+            end: moment("2024-12-27")
         });
     } else if (propertyName === "Elio") {
-        // Elio has a booking only on New Year's Eve 2024
-        const newYearsEve = moment("2024-12-31");
+        // Only booked for New Year's 2024-2025
         bookings.push({
-            start: newYearsEve,
-            end: newYearsEve.clone().add(1, 'days')
+            start: moment("2024-12-30"),
+            end: moment("2025-01-02")
         });
     } else if (propertyName === "Avalon") {
-        // Avalon has a booking only on Valentine's Day 2025
-        const valentinesDay = moment("2025-02-14");
+        // Only booked for Valentine's Day 2025
         bookings.push({
-            start: valentinesDay,
-            end: valentinesDay.clone().add(1, 'days')
+            start: moment("2025-02-14"),
+            end: moment("2025-02-15")
         });
     }
     
-    console.log(`Generated ${bookings.length} bookings for ${propertyName}`);
-    
-    // Add bookings to the iCal data
+    // Add the bookings to the iCal data
     for (let i = 0; i < bookings.length; i++) {
         const booking = bookings[i];
-        const uid = `booking-${propertyName.replace(/\s+/g, '-').toLowerCase()}-${i}`;
-        const summary = `Booked`;
-        
         icalData += `
 BEGIN:VEVENT
 DTSTART:${booking.start.format('YYYYMMDD')}
 DTEND:${booking.end.format('YYYYMMDD')}
-SUMMARY:${summary}
-UID:${uid}
+SUMMARY:Booked
+UID:booking-${propertyName.toLowerCase().replace(/\s+/g, '-')}-${i}
 END:VEVENT`;
     }
     
     icalData += `
 END:VCALENDAR`;
     
+    console.log(`Generated simulated iCal data for ${propertyName} with ${bookings.length} bookings`);
     return icalData;
 }
 
