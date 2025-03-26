@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize the page with instructions
     resultsContainer.innerHTML = `
         <p class="initial-message">
-            Select check-in and check-out dates to see which properties are available.
+            Select dates to check property availability
         </p>
     `;
     
@@ -76,7 +76,27 @@ function initializeCalendars() {
         altFormat: "F j, Y",
         static: true, // Helps with positioning
         disableMobile: true, // Use the same UI on all devices
-        appendTo: document.querySelector('.container') // Control where calendar appears
+        appendTo: document.querySelector('.container'), // Control where calendar appears
+        onOpen: function(selectedDates, dateStr, instance) {
+            // Force recalculation of calendar dimensions
+            setTimeout(() => {
+                instance.calendarContainer.classList.add('open');
+                // Make sure calendar is fully visible
+                const calendarRect = instance.calendarContainer.getBoundingClientRect();
+                const containerRect = document.querySelector('.container').getBoundingClientRect();
+                
+                // Adjust position if needed to ensure full visibility
+                if (calendarRect.right > containerRect.right) {
+                    instance.calendarContainer.style.left = 'auto';
+                    instance.calendarContainer.style.right = '10px';
+                }
+                
+                if (calendarRect.left < containerRect.left) {
+                    instance.calendarContainer.style.left = '10px';
+                    instance.calendarContainer.style.right = 'auto';
+                }
+            }, 0);
+        }
     };
     
     // Initialize Flatpickr for check-in date
@@ -398,7 +418,7 @@ function showLoading() {
  * @param {Moment} end - Check-out date
  */
 function showResults(availableProperties, start, end) {
-    const formatDate = date => date.format('MMMM D, YYYY');
+    const formatDate = date => date.format('MMM D, YYYY'); // Shorter date format
     const dateRange = `${formatDate(start)} to ${formatDate(end)}`;
     
     if (availableProperties.length > 0) {
@@ -407,8 +427,7 @@ function showResults(availableProperties, start, end) {
             .join('');
         
         resultsContainer.innerHTML = `
-            <h3>Available Properties</h3>
-            <p>For ${dateRange}:</p>
+            <h3 style="margin-top: 0; margin-bottom: 10px; font-size: 16px;">Available for ${dateRange}:</h3>
             <ul class="property-list">
                 ${propertyList}
             </ul>
@@ -416,7 +435,7 @@ function showResults(availableProperties, start, end) {
     } else {
         resultsContainer.innerHTML = `
             <p class="no-properties">No properties available for ${dateRange}</p>
-            <p>Please try different dates.</p>
+            <p style="text-align: center; margin-top: 5px;">Please try different dates.</p>
         `;
     }
 }
