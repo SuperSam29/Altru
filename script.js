@@ -181,8 +181,8 @@ CALSCALE:GREGORIAN`;
     const today = moment();
     let bookings = [];
     
-    if (propertyName === "Beach House") {
-        // Beach House has bookings for next weekend and in 3 weeks
+    if (propertyName === "Oasis") {
+        // Oasis has bookings for next weekend and in 3 weeks
         const nextWeekend = today.clone().add(1, 'week').day(6); // Next Saturday
         bookings.push({
             start: nextWeekend.clone(),
@@ -194,15 +194,15 @@ CALSCALE:GREGORIAN`;
             start: inThreeWeeks.clone(),
             end: inThreeWeeks.clone().add(5, 'days')
         });
-    } else if (propertyName === "Mountain Cabin") {
-        // Mountain Cabin is booked for the week after next
+    } else if (propertyName === "Elio") {
+        // Elio is booked for the week after next
         const weekAfterNext = today.clone().add(2, 'weeks');
         bookings.push({
             start: weekAfterNext.clone(),
             end: weekAfterNext.clone().add(7, 'days')
         });
-    } else {
-        // City Apartment has a booking starting in 10 days
+    } else if (propertyName === "Avalon") {
+        // Avalon has a booking starting in 10 days
         const inTenDays = today.clone().add(10, 'days');
         bookings.push({
             start: inTenDays.clone(),
