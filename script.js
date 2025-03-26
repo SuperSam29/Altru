@@ -87,7 +87,8 @@ async function checkPropertyAvailability(property, start, end) {
         let icalText;
         
         try {
-            const response = await fetch(icalUrl);
+            // Use the CORS proxy in the fetch URL
+            const response = await fetch(corsProxy + icalUrl);
             icalText = await response.text();
         } catch (fetchError) {
             console.error(`Error fetching iCal data: ${fetchError.message}`);
@@ -96,39 +97,51 @@ async function checkPropertyAvailability(property, start, end) {
             icalText = getSimulatedIcalData(property.name);
         }
         
-        // Parse the iCal data
-        const jcalData = ICAL.parse(icalText);
-        const comp = new ICAL.Component(jcalData);
-        const events = comp.getAllSubcomponents("vevent");
-        
-        // Log for debugging
-        console.log(`Found ${events.length} events for ${property.name}`);
-        
-        // Check if the requested date range overlaps with any booked periods
-        for (const event of events) {
-            const icalEvent = new ICAL.Event(event);
+        try {
+            // Parse the iCal data
+            const jcalData = ICAL.parse(icalText);
+            const comp = new ICAL.Component(jcalData);
+            const events = comp.getAllSubcomponents("vevent");
             
-            if (!icalEvent.startDate || !icalEvent.endDate) {
-                console.warn("Event missing start or end date, skipping");
-                continue;
+            // Log for debugging
+            console.log(`Found ${events.length} events for ${property.name}`);
+            
+            // Check if the requested date range overlaps with any booked periods
+            for (const event of events) {
+                try {
+                    const icalEvent = new ICAL.Event(event);
+                    
+                    if (!icalEvent.startDate || !icalEvent.endDate) {
+                        console.warn("Event missing start or end date, skipping");
+                        continue;
+                    }
+                    
+                    const eventStart = moment(icalEvent.startDate.toJSDate());
+                    const eventEnd = moment(icalEvent.endDate.toJSDate());
+                    
+                    console.log(`Checking event: ${eventStart.format('YYYY-MM-DD')} to ${eventEnd.format('YYYY-MM-DD')}`);
+                    
+                    // If there's any overlap between the requested dates and booked dates,
+                    // the property is not available
+                    if (start.isBefore(eventEnd) && end.isAfter(eventStart)) {
+                        console.log(`Conflict found for ${property.name}`);
+                        return false;
+                    }
+                } catch (eventError) {
+                    console.error("Error processing calendar event:", eventError);
+                    // Continue to next event if there's an error with this one
+                    continue;
+                }
             }
             
-            const eventStart = moment(icalEvent.startDate.toJSDate());
-            const eventEnd = moment(icalEvent.endDate.toJSDate());
-            
-            console.log(`Checking event: ${eventStart.format('YYYY-MM-DD')} to ${eventEnd.format('YYYY-MM-DD')}`);
-            
-            // If there's any overlap between the requested dates and booked dates,
-            // the property is not available
-            if (start.isBefore(eventEnd) && end.isAfter(eventStart)) {
-                console.log(`Conflict found for ${property.name}`);
-                return false;
-            }
+            // If we get here, there are no conflicting bookings
+            console.log(`${property.name} is available for the selected dates`);
+            return true;
+        } catch (parseError) {
+            console.error("Error parsing iCal data:", parseError);
+            // For demo purposes, assume property is available if parsing fails
+            return true;
         }
-        
-        // If we get here, there are no conflicting bookings
-        console.log(`${property.name} is available for the selected dates`);
-        return true;
     } catch (error) {
         console.error(`Error checking availability for ${property.name}:`, error);
         // For demo purposes, assume property is available if there's an error
@@ -188,6 +201,8 @@ function showError(message) {
  * @returns {string} - iCal data as text
  */
 function getSimulatedIcalData(propertyName) {
+    console.log(`Generating simulated data for ${propertyName}`);
+    
     // Generate some sample iCal data with random bookings
     let icalData = `BEGIN:VCALENDAR
 PRODID:-//Airbnb Inc//Airbnb Calendar 1.0//EN
@@ -198,28 +213,32 @@ CALSCALE:GREGORIAN`;
     const today = moment();
     let bookings = [];
     
+    // For demo purposes, only add a single booking per property
+    // with very specific dates so most user selections will show availability
     if (propertyName === "Oasis") {
-        // Oasis has minimal bookings to show it as available most of the time
-        const nextMonth = today.clone().add(1, 'month').date(15);
+        // Oasis has a booking only on December 24-26, 2024
+        const christmasEve = moment("2024-12-24");
         bookings.push({
-            start: nextMonth.clone(),
-            end: nextMonth.clone().add(2, 'days')
+            start: christmasEve,
+            end: christmasEve.clone().add(2, 'days')
         });
     } else if (propertyName === "Elio") {
-        // Elio has booking next week
-        const nextWeek = today.clone().add(7, 'days');
+        // Elio has a booking only on New Year's Eve 2024
+        const newYearsEve = moment("2024-12-31");
         bookings.push({
-            start: nextWeek.clone(),
-            end: nextWeek.clone().add(3, 'days')
+            start: newYearsEve,
+            end: newYearsEve.clone().add(1, 'days')
         });
     } else if (propertyName === "Avalon") {
-        // Avalon has a booking in 3 weeks
-        const inThreeWeeks = today.clone().add(21, 'days');
+        // Avalon has a booking only on Valentine's Day 2025
+        const valentinesDay = moment("2025-02-14");
         bookings.push({
-            start: inThreeWeeks.clone(),
-            end: inThreeWeeks.clone().add(4, 'days')
+            start: valentinesDay,
+            end: valentinesDay.clone().add(1, 'days')
         });
     }
+    
+    console.log(`Generated ${bookings.length} bookings for ${propertyName}`);
     
     // Add bookings to the iCal data
     for (let i = 0; i < bookings.length; i++) {
