@@ -14,7 +14,7 @@ const properties = [
     }
 ];
 
-// URL to our server-side proxy for fetching iCal data
+// URL to our server-side proxy for fetching iCal data - updated
 const SERVER_URL = "https://altru-q6ed5i0qn-bpps-projects-d47b6e50.vercel.app/ical";
 
 // DOM elements
