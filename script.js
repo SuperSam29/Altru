@@ -87,8 +87,17 @@ function initializeCalendars() {
                     selectedCheckOutDate = null;
                 }
                 
-                // Focus the check-out date input if check-in is selected
+                // If no check-out date is selected, default to day after check-in
                 if (!selectedCheckOutDate) {
+                    // Create a date object for the day after check-in
+                    const nextDay = new Date(selectedCheckInDate);
+                    nextDay.setDate(nextDay.getDate() + 1);
+                    
+                    // Set the check-out date picker to the next day
+                    window.checkOutPicker.setDate(nextDay);
+                    selectedCheckOutDate = nextDay;
+                    
+                    // Focus the check-out date input
                     setTimeout(() => {
                         checkOutDateInput.focus();
                     }, 300);

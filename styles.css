@@ -27,6 +27,10 @@ body {
     background-color: white;
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
+    height: 600px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 h2 {
@@ -57,6 +61,7 @@ h2:after {
     box-shadow: var(--box-shadow);
     overflow: hidden;
     transition: var(--transition);
+    flex-shrink: 0;
 }
 
 .booking-widget:hover {
@@ -175,10 +180,12 @@ input[type="text"]:focus {
     background-color: #f9fafc;
     border-radius: var(--border-radius);
     padding: 25px;
-    min-height: 100px;
+    height: 300px;
+    overflow-y: auto;
     transition: var(--transition);
     opacity: 0;
     transform: translateY(10px);
+    flex-grow: 1;
 }
 
 .results-container.visible {
