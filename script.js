@@ -1,16 +1,31 @@
-// Array of properties with their iCal URLs
+// Array of properties with their iCal URLs and details
 const properties = [
     { 
         name: "Oasis", 
-        icalUrl: "https://www.airbnb.co.uk/calendar/ical/1194779357845731963.ics?s=ca2a7532c96d1edb8cb1a49c80862fd1" 
+        icalUrl: "https://www.airbnb.co.uk/calendar/ical/1194779357845731963.ics?s=ca2a7532c96d1edb8cb1a49c80862fd1",
+        description: "Luxury 4 bedroom villa with private pool and ocean views",
+        image: "https://images.unsplash.com/photo-1580587771525-78b9dba3b914?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1074&q=80",
+        beds: 4,
+        baths: 3,
+        guests: 8
     },
     { 
         name: "Elio", 
-        icalUrl: "https://www.airbnb.co.uk/calendar/ical/1334655061299011571.ics?s=db782cbedab27f01e32b87423a50e35b" 
+        icalUrl: "https://www.airbnb.co.uk/calendar/ical/1334655061299011571.ics?s=db782cbedab27f01e32b87423a50e35b",
+        description: "Serene 3 bedroom retreat with mountain views and hot tub",
+        image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1075&q=80",
+        beds: 3,
+        baths: 2,
+        guests: 6
     },
     { 
         name: "Avalon", 
-        icalUrl: "https://www.airbnb.co.uk/calendar/ical/1361426217954407183.ics?s=23a434061b45e5ac9a261a66f17d849c" 
+        icalUrl: "https://www.airbnb.co.uk/calendar/ical/1361426217954407183.ics?s=23a434061b45e5ac9a261a66f17d849c",
+        description: "Beachfront 5 bedroom villa with infinity pool and chef service",
+        image: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80",
+        beds: 5,
+        baths: 4,
+        guests: 10
     }
 ];
 
@@ -21,13 +36,16 @@ const PROXY_URLS = [
     "https://proxy.cors.sh/",
     "https://altru-q6ed5i0qn-bpps-projects-d47b6e50.vercel.app/ical?url="
 ];
-let currentProxyIndex = 0;
 
 // DOM elements
 const datePicker = document.getElementById('date-picker');
 const resultsContainer = document.getElementById('results');
+const propertiesGrid = document.getElementById('properties-grid');
 
-// Initialize Flatpickr date range picker
+// Initialize property cards
+initializePropertyCards();
+
+// Initialize Flatpickr date range picker with animation
 const fpInstance = flatpickr(datePicker, {
     mode: "range",
     minDate: "today",
@@ -35,6 +53,9 @@ const fpInstance = flatpickr(datePicker, {
     altInput: true,
     altFormat: "F j, Y",
     conjunction: " to ",
+    showMonths: window.innerWidth > 768 ? 2 : 1,
+    animate: true,
+    disableMobile: true,
     onChange: function(selectedDates) {
         if (selectedDates.length === 2) {
             checkAvailability(selectedDates[0], selectedDates[1]);
@@ -46,6 +67,57 @@ const fpInstance = flatpickr(datePicker, {
 const isICALLoaded = typeof ICAL !== 'undefined';
 if (!isICALLoaded) {
     console.warn("ICAL.js library not loaded! Using simplified parser instead.");
+}
+
+/**
+ * Create and display property cards
+ */
+function initializePropertyCards() {
+    propertiesGrid.innerHTML = '';
+    const template = document.getElementById('property-card-template');
+    
+    properties.forEach((property, index) => {
+        const card = template.content.cloneNode(true);
+        
+        // Set property details
+        card.querySelector('.property-name').textContent = property.name;
+        card.querySelector('.property-description').textContent = property.description;
+        
+        // Set property image
+        const imageDiv = card.querySelector('.property-image');
+        imageDiv.style.backgroundImage = `url(${property.image})`;
+        
+        // Set property features
+        const features = card.querySelector('.property-features');
+        features.innerHTML = `
+            <span><i class="fas fa-bed"></i> ${property.beds} beds</span>
+            <span><i class="fas fa-bath"></i> ${property.baths} baths</span>
+            <span><i class="fas fa-users"></i> ${property.guests} guests</span>
+        `;
+        
+        // Set initial status
+        const statusDiv = card.querySelector('.property-status');
+        statusDiv.textContent = 'Select dates';
+        statusDiv.classList.add('loading');
+        
+        // Set availability message
+        card.querySelector('.property-availability').innerHTML = 
+            '<span>Select dates to check availability</span>';
+        
+        // Add card to the grid
+        propertiesGrid.appendChild(card);
+        
+        // Add animation with GSAP (optional)
+        if (typeof gsap !== 'undefined') {
+            gsap.from(propertiesGrid.children[index], {
+                opacity: 0,
+                y: 30,
+                duration: 0.6,
+                delay: 0.1 * index,
+                ease: "power2.out"
+            });
+        }
+    });
 }
 
 /**
@@ -113,9 +185,17 @@ async function checkAvailability(startDate, endDate) {
     // Show loading state
     showLoading();
     
+    // Update all property cards to loading state
+    updateAllCardStatuses('loading', 'Checking...');
+    
     // Create moment objects for date comparison
     const start = moment(startDate);
     const end = moment(endDate);
+    
+    // Format dates for display
+    const formattedStart = moment(startDate).format('MMM D, YYYY');
+    const formattedEnd = moment(endDate).format('MMM D, YYYY');
+    const dateRange = `${formattedStart} - ${formattedEnd}`;
     
     // Track available properties
     const availableProperties = [];
@@ -123,16 +203,26 @@ async function checkAvailability(startDate, endDate) {
     
     try {
         // Check each property
-        for (const property of properties) {
+        for (const [index, property] of properties.entries()) {
             try {
+                // Update card to checking status
+                updateCardStatus(index, 'loading', 'Checking...');
+                
                 const isAvailable = await checkPropertyAvailability(property, start, end);
+                
                 if (isAvailable) {
                     availableProperties.push(property.name);
+                    // Update card to available status with animation
+                    updateCardStatus(index, 'available', 'Available', dateRange, true);
+                } else {
+                    // Update card to unavailable status with animation
+                    updateCardStatus(index, 'unavailable', 'Unavailable', dateRange, false);
                 }
             } catch (error) {
                 console.error(`Error checking ${property.name}:`, error);
                 hasErrors = true;
-                // Continue with next property even if one fails
+                // Update card to error status
+                updateCardStatus(index, 'unavailable', 'Error', 'Could not check availability');
             }
         }
         
@@ -145,6 +235,67 @@ async function checkAvailability(startDate, endDate) {
     } catch (error) {
         showError("There was an error checking availability. Please try again.");
         console.error("Error in checkAvailability:", error);
+    }
+}
+
+/**
+ * Update the status of a specific property card
+ * @param {number} index - Index of the property in the array
+ * @param {string} statusClass - CSS class for the status (loading, available, unavailable)
+ * @param {string} statusText - Text to display in the status badge
+ * @param {string} dateRange - Date range string (optional)
+ * @param {boolean} isAvailable - Whether the property is available
+ */
+function updateCardStatus(index, statusClass, statusText, dateRange = '', isAvailable = false) {
+    const card = propertiesGrid.children[index];
+    if (!card) return;
+    
+    // Update status badge
+    const statusDiv = card.querySelector('.property-status');
+    statusDiv.textContent = statusText;
+    statusDiv.className = 'property-status'; // Reset classes
+    statusDiv.classList.add(statusClass);
+    
+    // Update availability message
+    const availabilityDiv = card.querySelector('.property-availability');
+    if (dateRange) {
+        const messageClass = isAvailable ? 'available-dates' : 'unavailable-dates';
+        availabilityDiv.innerHTML = 
+            `<span class="${messageClass}">
+                ${isAvailable ? '✓ Available' : '✗ Unavailable'} 
+                for ${dateRange}
+            </span>`;
+    } else {
+        availabilityDiv.innerHTML = '<span>Select dates to check availability</span>';
+    }
+    
+    // Add animation with GSAP if available
+    if (typeof gsap !== 'undefined') {
+        gsap.from(statusDiv, {
+            scale: 0.5,
+            opacity: 0,
+            duration: 0.4,
+            ease: "back.out(1.7)"
+        });
+        
+        gsap.from(availabilityDiv, {
+            y: 10,
+            opacity: 0,
+            duration: 0.4,
+            delay: 0.1,
+            ease: "power2.out"
+        });
+    }
+}
+
+/**
+ * Update all property cards to a specific status
+ * @param {string} statusClass - CSS class for the status
+ * @param {string} statusText - Text to display in the status badge
+ */
+function updateAllCardStatuses(statusClass, statusText) {
+    for (let i = 0; i < properties.length; i++) {
+        updateCardStatus(i, statusClass, statusText);
     }
 }
 
@@ -265,7 +416,15 @@ async function checkPropertyAvailability(property, start, end) {
  * Display loading state
  */
 function showLoading() {
-    resultsContainer.innerHTML = '<p class="loading">Checking availability...</p>';
+    resultsContainer.innerHTML = '<div class="loading">Checking availability</div>';
+    
+    // Add animation with GSAP if available
+    if (typeof gsap !== 'undefined') {
+        gsap.from(resultsContainer, {
+            opacity: 0,
+            duration: 0.4
+        });
+    }
 }
 
 /**
@@ -280,21 +439,35 @@ function showResults(availableProperties, start, end) {
     
     if (availableProperties.length > 0) {
         const propertyList = availableProperties
-            .map(name => `<li class="property-item">${name}</li>`)
+            .map((name, index) => `<li class="property-item available" style="--index: ${index}">${name}</li>`)
             .join('');
         
         resultsContainer.innerHTML = `
-            <h3>Available Properties</h3>
-            <p>For ${dateRange}:</p>
-            <ul class="property-list">
-                ${propertyList}
-            </ul>
+            <div class="availability-results">
+                <h3>Available Properties</h3>
+                <p>For ${dateRange}:</p>
+                <ul class="property-list">
+                    ${propertyList}
+                </ul>
+            </div>
         `;
     } else {
         resultsContainer.innerHTML = `
-            <p class="no-properties">No properties available for ${dateRange}</p>
-            <p>Please try different dates.</p>
+            <div class="availability-results">
+                <p class="no-properties">No properties available for ${dateRange}</p>
+                <p>Please try different dates.</p>
+            </div>
         `;
+    }
+    
+    // Add animation with GSAP if available
+    if (typeof gsap !== 'undefined') {
+        gsap.from('.availability-results', {
+            opacity: 0,
+            y: 20,
+            duration: 0.5,
+            ease: "power2.out"
+        });
     }
 }
 
@@ -303,12 +476,19 @@ function showResults(availableProperties, start, end) {
  * @param {string} message - Error message to display
  */
 function showError(message) {
-    resultsContainer.innerHTML = `<div class="error-message">${message}</div>`;
-}
-
-// Initialize the page with instructions
-resultsContainer.innerHTML = `
-    <p class="initial-message">
-        Select check-in and check-out dates to see which properties are available.
-    </p>
-`; 
+    resultsContainer.innerHTML = `
+        <div class="error-message">
+            <i class="fas fa-exclamation-circle"></i> ${message}
+        </div>
+    `;
+    
+    // Add animation with GSAP if available
+    if (typeof gsap !== 'undefined') {
+        gsap.from('.error-message', {
+            opacity: 0,
+            scale: 0.9,
+            duration: 0.4,
+            ease: "power2.out"
+        });
+    }
+} 
