@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Airbnb Calendar Availability Checker</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Property Availability Checker</h2>
+        <div class="date-picker-container">
+            <label for="date-picker">Select your check-in and check-out dates:</label>
+            <input type="text" id="date-picker" placeholder="Choose dates">
+        </div>
+        <div id="results" class="results-container">
+            <p class="initial-message">Select dates to check property availability</p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ical.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment/moment.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html> 

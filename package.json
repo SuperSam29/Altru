@@ -1,0 +1,23 @@
+{
+  "name": "airbnb-ical-calendar-integration",
+  "version": "1.0.0",
+  "description": "A solution for integrating Airbnb iCal calendar data into a Wix website",
+  "main": "index.html",
+  "scripts": {
+    "start-proxy": "node cors-proxy.js"
+  },
+  "keywords": [
+    "airbnb",
+    "ical",
+    "calendar",
+    "wix",
+    "iframe"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.6.0",
+    "cors": "^2.8.5",
+    "express": "^4.18.2"
+  }
+} 
