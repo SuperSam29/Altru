@@ -1,4 +1,4 @@
-// Array of properties with their iCal URLs (replace with actual URLs)
+// Array of properties with their iCal URLs
 const properties = [
     { 
         name: "Oasis", 
@@ -13,6 +13,9 @@ const properties = [
         icalUrl: "https://www.airbnb.co.uk/calendar/ical/1361426217954407183.ics?s=23a434061b45e5ac9a261a66f17d849c" 
     }
 ];
+
+// URL to our server-side proxy for fetching iCal data
+const SERVER_URL = "https://altru-ical-server.vercel.app/ical";
 
 // DOM elements
 const datePicker = document.getElementById('date-picker');
@@ -79,19 +82,25 @@ async function checkAvailability(startDate, endDate) {
  */
 async function checkPropertyAvailability(property, start, end) {
     try {
-        // Attempt to fetch the iCal data from Airbnb
-        // Note: Direct fetching may fail due to CORS restrictions
-        let icalText;
+        // Fetch the iCal data using our server-side proxy
+        console.log(`Fetching iCal data for ${property.name}`);
         
+        // Construct the URL to our server endpoint
+        const proxyUrl = `${SERVER_URL}?url=${encodeURIComponent(property.icalUrl)}`;
+        
+        let icalText;
         try {
-            // Try fetching without a proxy first
-            console.log(`Fetching iCal data for ${property.name} from ${property.icalUrl}`);
-            const response = await fetch(property.icalUrl);
+            const response = await fetch(proxyUrl);
+            
+            if (!response.ok) {
+                throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+            }
+            
             icalText = await response.text();
             console.log(`Successfully fetched iCal data for ${property.name}`);
         } catch (fetchError) {
             console.error(`Error fetching iCal data for ${property.name}: ${fetchError.message}`);
-            // Fallback to simulated data only if fetch fails
+            // Fallback to simulated data if server fetch fails
             console.log(`Using fallback data for ${property.name}`);
             icalText = getSimulatedIcalData(property.name);
         }
