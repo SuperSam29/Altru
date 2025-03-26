@@ -15,7 +15,7 @@ const properties = [
 ];
 
 // URL to our server-side proxy for fetching iCal data
-const SERVER_URL = "https://altru-ical-server.vercel.app/ical";
+const SERVER_URL = "https://altru-k7ib22th4-bpps-projects-d47b6e50.vercel.app/ical";
 
 // DOM elements
 const datePicker = document.getElementById('date-picker');
