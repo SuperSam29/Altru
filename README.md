@@ -1,4 +1,4 @@
-# Airbnb iCal Calendar Integration for Wix
+# Altru - Airbnb iCal Calendar Integration for Wix
 
 This project provides a cost-effective solution for integrating Airbnb iCal calendar data into a Wix website using an iframe. The solution allows website visitors to check property availability based on the dates they select without relying on paid plugins.
 
@@ -107,4 +107,4 @@ function showResults(availableProperties, start, end) {
 This solution uses the following open-source libraries:
 - [Flatpickr](https://flatpickr.js.org/) - Lightweight date picker
 - [ical.js](https://github.com/mozilla-comm/ical.js) - iCal parser
-- [moment.js](https://momentjs.com/) - Date manipulation library 
+- [moment.js](https://momentjs.com/) - Date manipulation library
