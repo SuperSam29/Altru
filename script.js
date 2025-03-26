@@ -32,77 +32,108 @@ const resultsContainer = document.getElementById('results');
 let selectedCheckInDate = null;
 let selectedCheckOutDate = null;
 
-// Initialize Flatpickr for check-in date
-const checkInPicker = flatpickr(checkInDateInput, {
-    minDate: "today",
-    dateFormat: "Y-m-d",
-    altInput: true,
-    altFormat: "F j, Y",
-    onChange: function(selectedDates) {
-        if (selectedDates.length > 0) {
-            selectedCheckInDate = selectedDates[0];
-            
-            // Update check-out date minimum date
-            checkOutPicker.set('minDate', selectedDates[0]);
-            
-            // If check-out date is before check-in date, clear it
-            if (selectedCheckOutDate && selectedCheckOutDate < selectedCheckInDate) {
-                checkOutPicker.clear();
-                selectedCheckOutDate = null;
-            }
-            
-            // Focus the check-out date input if check-in is selected
-            if (!selectedCheckOutDate) {
-                setTimeout(() => {
-                    checkOutDateInput.focus();
-                }, 300);
-            } else {
-                validateAndCheckAvailability();
-            }
-            
-            // Add animation effect
-            checkInDateInput.classList.add('date-selected');
-            setTimeout(() => {
-                checkInDateInput.classList.remove('date-selected');
-            }, 500);
-        }
-    }
-});
-
-// Initialize Flatpickr for check-out date
-const checkOutPicker = flatpickr(checkOutDateInput, {
-    minDate: "today",
-    dateFormat: "Y-m-d",
-    altInput: true,
-    altFormat: "F j, Y",
-    onChange: function(selectedDates) {
-        if (selectedDates.length > 0) {
-            selectedCheckOutDate = selectedDates[0];
-            
-            // Add animation effect
-            checkOutDateInput.classList.add('date-selected');
-            setTimeout(() => {
-                checkOutDateInput.classList.remove('date-selected');
-            }, 500);
-            
-            validateAndCheckAvailability();
-        }
-    }
-});
-
-// Event listener for check availability button
-checkAvailabilityBtn.addEventListener('click', () => {
-    if (selectedCheckInDate && selectedCheckOutDate) {
-        validateAndCheckAvailability();
-    } else {
-        showError("Please select both check-in and check-out dates");
-    }
-});
-
 // Check if ICAL library is loaded
 const isICALLoaded = typeof ICAL !== 'undefined';
 if (!isICALLoaded) {
     console.warn("ICAL.js library not loaded! Using simplified parser instead.");
+}
+
+// Wait for DOM to be fully loaded
+document.addEventListener('DOMContentLoaded', function() {
+    initializeCalendars();
+    
+    // Add CSS class to style inputs when focused
+    document.querySelectorAll('input[type="text"]').forEach(input => {
+        input.addEventListener('focus', () => {
+            input.parentElement.classList.add('focused');
+        });
+        
+        input.addEventListener('blur', () => {
+            input.parentElement.classList.remove('focused');
+        });
+    });
+    
+    // Initialize the page with instructions
+    resultsContainer.innerHTML = `
+        <p class="initial-message">
+            Select check-in and check-out dates to see which properties are available.
+        </p>
+    `;
+    
+    // Show the results container with a slight delay for animation
+    setTimeout(() => {
+        resultsContainer.classList.add('visible');
+    }, 300);
+});
+
+// Initialize Flatpickr calendars
+function initializeCalendars() {
+    // Initialize Flatpickr for check-in date
+    window.checkInPicker = flatpickr(checkInDateInput, {
+        minDate: "today",
+        dateFormat: "Y-m-d",
+        altInput: true,
+        altFormat: "F j, Y",
+        onChange: function(selectedDates) {
+            if (selectedDates.length > 0) {
+                selectedCheckInDate = selectedDates[0];
+                
+                // Update check-out date minimum date
+                window.checkOutPicker.set('minDate', selectedDates[0]);
+                
+                // If check-out date is before check-in date, clear it
+                if (selectedCheckOutDate && selectedCheckOutDate < selectedCheckInDate) {
+                    window.checkOutPicker.clear();
+                    selectedCheckOutDate = null;
+                }
+                
+                // Focus the check-out date input if check-in is selected
+                if (!selectedCheckOutDate) {
+                    setTimeout(() => {
+                        checkOutDateInput.focus();
+                    }, 300);
+                } else {
+                    validateAndCheckAvailability();
+                }
+                
+                // Add animation effect
+                checkInDateInput.classList.add('date-selected');
+                setTimeout(() => {
+                    checkInDateInput.classList.remove('date-selected');
+                }, 500);
+            }
+        }
+    });
+
+    // Initialize Flatpickr for check-out date
+    window.checkOutPicker = flatpickr(checkOutDateInput, {
+        minDate: "today",
+        dateFormat: "Y-m-d",
+        altInput: true,
+        altFormat: "F j, Y",
+        onChange: function(selectedDates) {
+            if (selectedDates.length > 0) {
+                selectedCheckOutDate = selectedDates[0];
+                
+                // Add animation effect
+                checkOutDateInput.classList.add('date-selected');
+                setTimeout(() => {
+                    checkOutDateInput.classList.remove('date-selected');
+                }, 500);
+                
+                validateAndCheckAvailability();
+            }
+        }
+    });
+
+    // Event listener for check availability button
+    checkAvailabilityBtn.addEventListener('click', () => {
+        if (selectedCheckInDate && selectedCheckOutDate) {
+            validateAndCheckAvailability();
+        } else {
+            showError("Please select both check-in and check-out dates");
+        }
+    });
 }
 
 /**
@@ -385,27 +416,4 @@ function showError(message) {
     
     // Make the container visible with animation
     resultsContainer.classList.add('visible');
-}
-
-// Add CSS class to style inputs when focused
-document.querySelectorAll('input[type="text"]').forEach(input => {
-    input.addEventListener('focus', () => {
-        input.parentElement.classList.add('focused');
-    });
-    
-    input.addEventListener('blur', () => {
-        input.parentElement.classList.remove('focused');
-    });
-});
-
-// Initialize the page with instructions
-resultsContainer.innerHTML = `
-    <p class="initial-message">
-        Select check-in and check-out dates to see which properties are available.
-    </p>
-`;
-
-// Show the results container with a slight delay for animation
-setTimeout(() => {
-    resultsContainer.classList.add('visible');
-}, 300); 
+} 
