@@ -113,6 +113,7 @@ async function checkAvailability(startDate, endDate) {
     
     // Track available properties
     const availableProperties = [];
+    let hasErrors = false;
     
     try {
         // Check each property
@@ -124,11 +125,17 @@ async function checkAvailability(startDate, endDate) {
                 }
             } catch (error) {
                 console.error(`Error checking ${property.name}:`, error);
+                hasErrors = true;
+                // Continue with next property even if one fails
             }
         }
         
         // Display results
-        showResults(availableProperties, start, end);
+        if (hasErrors) {
+            showError("There were errors checking some properties. Some real availability data may be missing.");
+        } else {
+            showResults(availableProperties, start, end);
+        }
     } catch (error) {
         showError("There was an error checking availability. Please try again.");
         console.error("Error in checkAvailability:", error);
@@ -144,29 +151,26 @@ async function checkAvailability(startDate, endDate) {
  */
 async function checkPropertyAvailability(property, start, end) {
     try {
-        // Fetch the iCal data using our server-side proxy
-        console.log(`Fetching iCal data for ${property.name}`);
-        
-        // Construct the URL to our server endpoint
-        const proxyUrl = `${SERVER_URL}?url=${encodeURIComponent(property.icalUrl)}`;
+        // Fetching iCal data directly from Airbnb URL
+        console.log(`Fetching iCal data for ${property.name} directly from Airbnb`);
         
         let icalText;
         try {
-            // Use no-cors mode to avoid CORS errors, but this will result in an opaque response
-            // that we can't read, so we'll always fall back to simulated data for now
-            await fetch(proxyUrl, { mode: 'no-cors' });
-            console.log(`Request sent for ${property.name}, but using fallback data due to CORS limitations`);
+            // Make a direct request to the Airbnb URL
+            const response = await fetch(property.icalUrl);
             
-            // Use simulated data since we can't access the response with no-cors mode
-            icalText = getSimulatedIcalData(property.name);
+            if (!response.ok) {
+                throw new Error(`Error fetching calendar: ${response.status}`);
+            }
+            
+            icalText = await response.text();
+            console.log(`Successfully fetched real iCal data for ${property.name}`);
         } catch (fetchError) {
             console.error(`Error fetching iCal data for ${property.name}: ${fetchError.message}`);
-            // Fallback to simulated data if server fetch fails
-            console.log(`Using fallback data for ${property.name}`);
-            icalText = getSimulatedIcalData(property.name);
+            throw fetchError; // Rethrow to show the actual error
         }
         
-        // Parse the iCal data - use different methods depending on available libraries
+        // Parse the iCal data
         let events = [];
         
         if (isICALLoaded) {
@@ -201,7 +205,7 @@ async function checkPropertyAvailability(property, start, end) {
             events = parseICalSimple(icalText);
         }
         
-        console.log(`Found ${events.length} events for ${property.name}`);
+        console.log(`Found ${events.length} real events for ${property.name}`);
         
         // Check if the requested date range overlaps with any booked periods
         for (const event of events) {
@@ -222,12 +226,11 @@ async function checkPropertyAvailability(property, start, end) {
         }
         
         // If we get here, there are no conflicting bookings
-        console.log(`${property.name} is available for the selected dates`);
+        console.log(`${property.name} is available for the selected dates (based on real data)`);
         return true;
     } catch (error) {
         console.error(`Error checking availability for ${property.name}:`, error);
-        // For demo purposes, assume property is available if there's an error
-        return true;
+        throw error; // Don't hide errors
     }
 }
 
@@ -274,63 +277,6 @@ function showResults(availableProperties, start, end) {
  */
 function showError(message) {
     resultsContainer.innerHTML = `<div class="error-message">${message}</div>`;
-}
-
-/**
- * Generate simulated iCal data for testing
- * Used as a fallback if fetching the real data fails
- * @param {string} propertyName - Name of the property
- * @returns {string} - iCal data as text
- */
-function getSimulatedIcalData(propertyName) {
-    console.log(`Generating simulated data for ${propertyName}`);
-    
-    // Generate some sample iCal data with minimal bookings
-    let icalData = `BEGIN:VCALENDAR
-PRODID:-//Airbnb Inc//Airbnb Calendar 1.0//EN
-VERSION:2.0
-CALSCALE:GREGORIAN`;
-
-    // Very limited bookings - only specific holiday dates
-    let bookings = [];
-    
-    if (propertyName === "Oasis") {
-        // Only booked for Christmas 2024
-        bookings.push({
-            start: moment("2024-12-24"),
-            end: moment("2024-12-27")
-        });
-    } else if (propertyName === "Elio") {
-        // Only booked for New Year's 2024-2025
-        bookings.push({
-            start: moment("2024-12-30"),
-            end: moment("2025-01-02")
-        });
-    } else if (propertyName === "Avalon") {
-        // Only booked for Valentine's Day 2025
-        bookings.push({
-            start: moment("2025-02-14"),
-            end: moment("2025-02-15")
-        });
-    }
-    
-    // Add the bookings to the iCal data
-    for (let i = 0; i < bookings.length; i++) {
-        const booking = bookings[i];
-        icalData += `
-BEGIN:VEVENT
-DTSTART:${booking.start.format('YYYYMMDD')}
-DTEND:${booking.end.format('YYYYMMDD')}
-SUMMARY:Booked
-UID:booking-${propertyName.toLowerCase().replace(/\s+/g, '-')}-${i}
-END:VEVENT`;
-    }
-    
-    icalData += `
-END:VCALENDAR`;
-    
-    console.log(`Generated simulated iCal data for ${propertyName} with ${bookings.length} bookings`);
-    return icalData;
 }
 
 // Initialize the page with instructions
