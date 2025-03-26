@@ -3,76 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Altru Villas | Availability Checker</title>
+    <title>Altru Property Availability</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cedarville+Cursive&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="app-container">
-        <header class="app-header">
-            <div class="logo">
-                <span class="logo-text">altru</span>
-                <span class="logo-tagline">Luxury Villa Collection</span>
-            </div>
-        </header>
+    <div class="container">
+        <h2>Property Availability Checker</h2>
         
-        <main class="main-content">
-            <div class="search-container">
-                <h1 class="search-title">Find your perfect escape</h1>
-                <p class="search-subtitle">Check real-time availability across our luxury villas</p>
-                
-                <div class="search-box">
-                    <div class="date-picker-wrapper">
-                        <i class="fas fa-calendar-alt"></i>
-                        <input type="text" id="date-picker" placeholder="When are you traveling?">
-                    </div>
-                </div>
-            </div>
-            
-            <div class="properties-section">
-                <div class="properties-grid" id="properties-grid">
-                    <!-- Will be populated with property cards -->
+        <div class="booking-widget">
+            <div class="date-inputs">
+                <div class="date-input-container">
+                    <label for="check-in-date"><i class="fas fa-calendar-alt"></i> Check-in</label>
+                    <input type="text" id="check-in-date" placeholder="Select date">
                 </div>
                 
-                <div id="results" class="results-container">
-                    <p class="initial-message">Select your check-in and check-out dates to see availability</p>
+                <div class="date-input-container">
+                    <label for="check-out-date"><i class="fas fa-calendar-alt"></i> Check-out</label>
+                    <input type="text" id="check-out-date" placeholder="Select date">
                 </div>
-            </div>
-        </main>
-        
-        <footer class="app-footer">
-            <p>&copy; 2023 Altru Villas. All rights reserved.</p>
-        </footer>
-    </div>
-
-    <!-- Templates -->
-    <template id="property-card-template">
-        <div class="property-card">
-            <div class="property-image">
-                <div class="property-status"></div>
-            </div>
-            <div class="property-details">
-                <h3 class="property-name"></h3>
-                <p class="property-description">Luxury villa with stunning views</p>
-                <div class="property-features">
-                    <span><i class="fas fa-bed"></i> 4 beds</span>
-                    <span><i class="fas fa-bath"></i> 3 baths</span>
-                    <span><i class="fas fa-users"></i> 8 guests</span>
-                </div>
-                <div class="property-availability"></div>
+                
+                <button id="check-availability-btn" class="action-button">
+                    <i class="fas fa-search"></i> Check Availability
+                </button>
             </div>
         </div>
-    </template>
+        
+        <div id="results" class="results-container">
+            <p class="initial-message">Select dates to check property availability</p>
+        </div>
+    </div>
 
     <!-- Load libraries with specific versions -->
     <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
     <script src="https://unpkg.com/ical.js@1.5.0/build/ical.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.2/dist/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"></script>
     <script src="script.js"></script>
 </body>
 </html> 
