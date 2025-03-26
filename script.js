@@ -15,7 +15,13 @@ const properties = [
 ];
 
 // URL to our server-side proxy for fetching iCal data
-const SERVER_URL = "https://corsproxy.io/?";
+const PROXY_URLS = [
+    "https://api.allorigins.win/raw?url=", 
+    "https://cors-anywhere.herokuapp.com/", 
+    "https://proxy.cors.sh/",
+    "https://altru-q6ed5i0qn-bpps-projects-d47b6e50.vercel.app/ical?url="
+];
+let currentProxyIndex = 0;
 
 // DOM elements
 const datePicker = document.getElementById('date-picker');
@@ -151,88 +157,103 @@ async function checkAvailability(startDate, endDate) {
  */
 async function checkPropertyAvailability(property, start, end) {
     try {
-        // Fetching iCal data via CORS proxy
-        console.log(`Fetching iCal data for ${property.name} via CORS proxy`);
-        
-        // Construct the URL to the CORS proxy
-        const proxyUrl = `${SERVER_URL}${encodeURIComponent(property.icalUrl)}`;
-        
-        try {
-            // Make request through the CORS proxy
-            const response = await fetch(proxyUrl);
-            
-            if (!response.ok) {
-                console.error(`Server returned ${response.status}: ${response.statusText}`);
-                return true; // Assume available on error
-            }
-            
-            const icalText = await response.text();
-            console.log(`Successfully fetched real iCal data for ${property.name}`);
-            
-            // Parse the iCal data
-            let events = [];
-            
-            if (isICALLoaded) {
-                // Use ical.js if available
-                try {
-                    const jcalData = ICAL.parse(icalText);
-                    const comp = new ICAL.Component(jcalData);
-                    const icalEvents = comp.getAllSubcomponents("vevent");
-                    
-                    // Convert to our simplified format
-                    for (const event of icalEvents) {
-                        try {
-                            const icalEvent = new ICAL.Event(event);
-                            
-                            if (icalEvent.startDate && icalEvent.endDate) {
-                                events.push({
-                                    startDate: icalEvent.startDate.toJSDate(),
-                                    endDate: icalEvent.endDate.toJSDate()
-                                });
+        // Try each proxy service until one works
+        for (let i = 0; i < PROXY_URLS.length; i++) {
+            try {
+                // Fetching iCal data via CORS proxy
+                console.log(`Fetching iCal data for ${property.name} via CORS proxy ${i+1}`);
+                
+                // Construct the URL to the CORS proxy
+                const proxyUrl = PROXY_URLS[i] + encodeURIComponent(property.icalUrl);
+                
+                // Make request through the CORS proxy
+                const response = await fetch(proxyUrl);
+                
+                if (!response.ok) {
+                    console.error(`Proxy ${i+1} returned ${response.status}: ${response.statusText}`);
+                    continue; // Try next proxy
+                }
+                
+                const icalText = await response.text();
+                console.log(`Successfully fetched real iCal data for ${property.name}`);
+                
+                // Parse the iCal data
+                let events = [];
+                
+                if (isICALLoaded) {
+                    // Use ical.js if available
+                    try {
+                        const jcalData = ICAL.parse(icalText);
+                        const comp = new ICAL.Component(jcalData);
+                        const icalEvents = comp.getAllSubcomponents("vevent");
+                        
+                        // Convert to our simplified format
+                        for (const event of icalEvents) {
+                            try {
+                                const icalEvent = new ICAL.Event(event);
+                                
+                                if (icalEvent.startDate && icalEvent.endDate) {
+                                    events.push({
+                                        startDate: icalEvent.startDate.toJSDate(),
+                                        endDate: icalEvent.endDate.toJSDate()
+                                    });
+                                }
+                            } catch (eventError) {
+                                console.error("Error processing event:", eventError);
                             }
-                        } catch (eventError) {
-                            console.error("Error processing event:", eventError);
                         }
+                    } catch (parseError) {
+                        console.error("Error parsing with ICAL.js:", parseError);
+                        // Fallback to simple parser
+                        events = parseICalSimple(icalText);
                     }
-                } catch (parseError) {
-                    console.error("Error parsing with ICAL.js:", parseError);
-                    // Fallback to simple parser
+                } else {
+                    // Use simple parser
                     events = parseICalSimple(icalText);
                 }
-            } else {
-                // Use simple parser
-                events = parseICalSimple(icalText);
-            }
-            
-            console.log(`Found ${events.length} real events for ${property.name}`);
-            
-            // Check if the requested date range overlaps with any booked periods
-            for (const event of events) {
-                try {
-                    const eventStart = moment(event.startDate);
-                    const eventEnd = moment(event.endDate);
-                    
-                    // If there's any overlap between the requested dates and booked dates,
-                    // the property is not available
-                    if (start.isBefore(eventEnd) && end.isAfter(eventStart)) {
-                        console.log(`Conflict found for ${property.name}: ${eventStart.format('YYYY-MM-DD')} to ${eventEnd.format('YYYY-MM-DD')}`);
-                        return false;
+                
+                console.log(`Found ${events.length} real events for ${property.name}`);
+                
+                // Check if the requested date range overlaps with any booked periods
+                for (const event of events) {
+                    try {
+                        const eventStart = moment(event.startDate);
+                        const eventEnd = moment(event.endDate);
+                        
+                        // If there's any overlap between the requested dates and booked dates,
+                        // the property is not available
+                        if (start.isBefore(eventEnd) && end.isAfter(eventStart)) {
+                            console.log(`Conflict found for ${property.name}: ${eventStart.format('YYYY-MM-DD')} to ${eventEnd.format('YYYY-MM-DD')}`);
+                            return false;
+                        }
+                    } catch (eventError) {
+                        console.error("Error processing event dates:", eventError);
+                        continue;
                     }
-                } catch (eventError) {
-                    console.error("Error processing event dates:", eventError);
-                    continue;
                 }
+                
+                // If we get here, there are no conflicting bookings
+                console.log(`${property.name} is available for the selected dates (based on real data)`);
+                return true;
+            } catch (fetchError) {
+                console.error(`Error with proxy ${i+1} for ${property.name}: ${fetchError.message}`);
+                // Continue to next proxy if available
             }
-            
-            // If we get here, there are no conflicting bookings
-            console.log(`${property.name} is available for the selected dates (based on real data)`);
-            return true;
-            
-        } catch (fetchError) {
-            console.error(`Error fetching iCal data for ${property.name}: ${fetchError.message}`);
-            // If fetch fails, assume property is available
-            return true;
         }
+        
+        // If all proxies failed, try direct access with mode 'no-cors'
+        console.log(`All proxies failed for ${property.name}, trying direct access`);
+        try {
+            await fetch(property.icalUrl, { mode: 'no-cors' });
+            console.log(`Direct request sent for ${property.name}`);
+            return true; // Can't read response with no-cors, so assume available
+        } catch (directError) {
+            console.error(`Direct request failed for ${property.name}: ${directError.message}`);
+        }
+        
+        // All methods failed
+        console.log(`All methods failed for ${property.name}, assuming available`);
+        return true; // If all attempts fail, assume property is available
     } catch (error) {
         console.error(`Error checking availability for ${property.name}:`, error);
         // Return true as fallback - all properties will show as available
