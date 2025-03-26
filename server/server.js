@@ -4,20 +4,23 @@ const cors = require('cors');
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Enable CORS for all requests with specific origins
+// Enable CORS for all requests - allow ALL origins
 app.use(cors({
-  origin: ['https://supersam29.github.io', 'http://localhost:3000'],
-  methods: ['GET', 'POST'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  origin: '*',
+  methods: ['GET', 'OPTIONS'],
+  allowedHeaders: ['Content-Type']
 }));
 
-// Set CORS headers for all responses
+// Additional CORS headers for all responses
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', 'https://supersam29.github.io');
-  res.header('Access-Control-Allow-Methods', 'GET, POST');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type');
   next();
 });
+
+// Pre-flight OPTIONS requests
+app.options('*', cors());
 
 // Health check endpoint
 app.get('/', (req, res) => {
@@ -51,12 +54,12 @@ app.get('/ical', async (req, res) => {
     
     // Set appropriate content type for iCal data
     res.setHeader('Content-Type', 'text/calendar');
-    res.setHeader('Access-Control-Allow-Origin', 'https://supersam29.github.io');
+    res.setHeader('Access-Control-Allow-Origin', '*');
     res.send(response.data);
   } catch (error) {
     console.error('Error fetching iCal data:', error.message);
     // Set CORS headers even for error responses
-    res.setHeader('Access-Control-Allow-Origin', 'https://supersam29.github.io');
+    res.setHeader('Access-Control-Allow-Origin', '*');
     res.status(500).json({ 
       error: `Error fetching data: ${error.message}`,
       url: url

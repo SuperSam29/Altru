@@ -15,7 +15,7 @@ const properties = [
 ];
 
 // URL to our server-side proxy for fetching iCal data
-const SERVER_URL = "https://altru-n4bsho21n-bpps-projects-d47b6e50.vercel.app/ical";
+const SERVER_URL = "https://altru-q6ed5i0qn-bpps-projects-d47b6e50.vercel.app/ical";
 
 // DOM elements
 const datePicker = document.getElementById('date-picker');
@@ -151,16 +151,19 @@ async function checkAvailability(startDate, endDate) {
  */
 async function checkPropertyAvailability(property, start, end) {
     try {
-        // Fetching iCal data directly from Airbnb URL
-        console.log(`Fetching iCal data for ${property.name} directly from Airbnb`);
+        // Fetching iCal data via our server proxy
+        console.log(`Fetching iCal data for ${property.name} via server proxy`);
+        
+        // Construct the URL to our server endpoint
+        const proxyUrl = `${SERVER_URL}?url=${encodeURIComponent(property.icalUrl)}`;
         
         let icalText;
         try {
-            // Make a direct request to the Airbnb URL
-            const response = await fetch(property.icalUrl);
+            // Make request to our proxy server
+            const response = await fetch(proxyUrl);
             
             if (!response.ok) {
-                throw new Error(`Error fetching calendar: ${response.status}`);
+                throw new Error(`Server returned ${response.status}: ${response.statusText}`);
             }
             
             icalText = await response.text();
