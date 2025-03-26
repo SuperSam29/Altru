@@ -41,15 +41,16 @@ if (!isICALLoaded) {
 // Wait for DOM to be fully loaded
 document.addEventListener('DOMContentLoaded', function() {
     initializeCalendars();
+    makeInputWrappersClickable();
     
     // Add CSS class to style inputs when focused
     document.querySelectorAll('input[type="text"]').forEach(input => {
         input.addEventListener('focus', () => {
-            input.parentElement.classList.add('focused');
+            input.parentElement.parentElement.classList.add('focused');
         });
         
         input.addEventListener('blur', () => {
-            input.parentElement.classList.remove('focused');
+            input.parentElement.parentElement.classList.remove('focused');
         });
     });
     
@@ -425,4 +426,23 @@ function showError(message) {
     
     // Make the container visible with animation
     resultsContainer.classList.add('visible');
+}
+
+// Make input wrappers clickable to open calendar
+function makeInputWrappersClickable() {
+    // Make the entire date input container clickable for check-in
+    document.querySelector('.date-input-container:nth-child(1) .input-wrapper').addEventListener('click', function(e) {
+        if (e.target !== checkInDateInput) {
+            checkInDateInput.focus();
+            window.checkInPicker.open();
+        }
+    });
+    
+    // Make the entire date input container clickable for check-out
+    document.querySelector('.date-input-container:nth-child(2) .input-wrapper').addEventListener('click', function(e) {
+        if (e.target !== checkOutDateInput) {
+            checkOutDateInput.focus();
+            window.checkOutPicker.open();
+        }
+    });
 } 

@@ -33,27 +33,6 @@ body {
     flex-direction: column;
 }
 
-h2 {
-    color: var(--dark-color);
-    margin-top: 0;
-    text-align: center;
-    margin-bottom: 30px;
-    font-weight: 700;
-    position: relative;
-    padding-bottom: 15px;
-}
-
-h2:after {
-    content: '';
-    position: absolute;
-    left: 50%;
-    bottom: 0;
-    transform: translateX(-50%);
-    height: 3px;
-    width: 60px;
-    background-color: var(--accent-color);
-}
-
 .booking-widget {
     background-color: white;
     border-radius: var(--border-radius);
@@ -89,22 +68,40 @@ h2:after {
     transform: translateY(-3px);
 }
 
-.date-input-container::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 0;
-    height: 2px;
-    background-color: var(--primary-color);
-    transition: width 0.3s ease;
+.input-wrapper {
+    position: relative;
+    cursor: pointer;
+    border: 1px solid #e2e8f0;
+    border-radius: var(--border-radius);
+    background-color: #f9fafc;
+    transition: var(--transition);
 }
 
-.date-input-container.focused::after {
+.input-wrapper:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
+}
+
+.input-wrapper input {
     width: 100%;
+    padding: 12px 15px;
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: 16px;
+    background-color: transparent;
+    cursor: pointer;
 }
 
-.date-selected {
+.input-wrapper input:focus {
+    outline: none;
+}
+
+.date-input-container.focused .input-wrapper {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
+}
+
+.date-selected .input-wrapper {
     animation: pulse 0.5s ease-out;
 }
 
@@ -135,20 +132,8 @@ label i {
     color: var(--primary-color);
 }
 
-input[type="text"] {
-    width: 100%;
-    padding: 12px 15px;
-    border: 1px solid #e2e8f0;
-    border-radius: var(--border-radius);
-    font-size: 16px;
-    transition: var(--transition);
-    background-color: #f9fafc;
-}
-
 input[type="text"]:focus {
     outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
 }
 
 .action-button {
@@ -186,6 +171,7 @@ input[type="text"]:focus {
     opacity: 0;
     transform: translateY(10px);
     flex-grow: 1;
+    margin-top: 0;
 }
 
 .results-container.visible {
