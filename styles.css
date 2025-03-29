@@ -27,7 +27,7 @@ body {
     background-color: white;
     border-radius: 0;
     box-shadow: none;
-    height: 350px;
+    height: 275px;
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -167,7 +167,7 @@ input[type="text"]:focus {
     background-color: #f9fafc;
     border-radius: var(--border-radius);
     padding: 15px;
-    height: 150px;
+    height: 100px;
     overflow-y: auto;
     transition: var(--transition);
     opacity: 0;
@@ -305,12 +305,14 @@ input[type="text"]:focus {
 }
 
 .flatpickr-current-month {
-    font-weight: 600;
+    font-size: 14px;
+    padding: 5px 0;
 }
 
 .flatpickr-weekday {
-    font-weight: 600;
-    color: var(--dark-color);
+    font-size: 12px;
+    height: 28px;
+    line-height: 28px;
 }
 
 .flatpickr-day:hover {
@@ -321,12 +323,16 @@ input[type="text"]:focus {
 .flatpickr-calendar.open {
     z-index: 9999;
     display: inline-block;
-    max-height: 330px;
+    max-height: 180px !important;
     overflow: visible;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
     width: 340px !important;
     left: 50% !important;
-    transform: translateX(-50%) !important;
+    transform: translate(-50%, -15px) !important;
+    font-size: 11px;
+    position: absolute;
+    top: auto !important;
+    bottom: 100% !important;
 }
 
 /* Position the calendar relative to the container */
@@ -343,12 +349,15 @@ input[type="text"]:focus {
 .flatpickr-days {
     width: 100% !important;
     max-width: 100% !important;
+    max-height: 120px !important;
 }
 
 .flatpickr-day {
-    max-width: 40px;
-    height: 40px;
-    line-height: 40px;
+    max-width: 24px !important;
+    height: 24px !important;
+    line-height: 24px !important;
+    font-size: 10px !important;
+    margin: 1px !important;
 }
 
 /* Fix inner flatpickr containers */
@@ -357,6 +366,7 @@ input[type="text"]:focus {
 .flatpickr-innerContainer {
     width: 100% !important;
     max-width: 100% !important;
+    max-height: 120px !important;
 }
 
 /* Fix weekday display */
@@ -366,18 +376,51 @@ input[type="text"]:focus {
     justify-content: space-around !important;
 }
 
-.flatpickr-weekday {
-    flex: 1;
-    max-width: none !important;
-    width: auto !important;
+.flatpickr-weekdays {
+    height: 16px !important;
+    margin-top: 0 !important;
 }
 
-/* Fix for mobile to ensure full calendar display */
+.flatpickr-monthDropdown-months {
+    height: 22px;
+    padding: 0;
+}
+
+.flatpickr-months {
+    padding: 0 !important;
+    height: 22px !important;
+}
+
+.flatpickr-month {
+    height: 22px !important;
+}
+
+.flatpickr-current-month {
+    font-size: 11px !important;
+    padding: 1px 0 !important;
+    height: 22px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.flatpickr-weekdays {
+    height: 16px !important;
+    margin-top: 0 !important;
+}
+
+.flatpickr-weekday {
+    font-size: 9px !important;
+    height: 16px !important;
+    line-height: 16px !important;
+}
+
+/* Mobile adjustments */
 @media (max-width: 768px) {
     .container {
         margin: 0;
         padding: 10px;
-        height: 350px; /* Keep the same height as desktop */
+        height: 275px;
     }
     
     .date-inputs {
@@ -397,16 +440,27 @@ input[type="text"]:focus {
         grid-template-columns: 1fr;
     }
     
-    /* Fix for calendar on mobile */
     .flatpickr-calendar.open {
-        width: 280px !important; /* Slightly smaller on mobile */
-        left: 50% !important;
-        transform: translateX(-50%) !important;
+        max-height: 180px !important;
+        width: 280px !important;
+        transform: translate(-50%, -15px) !important;
     }
     
-    /* Add additional styles for results container on mobile */
+    .flatpickr-innerContainer,
+    .flatpickr-rContainer,
+    .flatpickr-days,
+    .dayContainer {
+        max-height: 120px !important;
+    }
+    
     .results-container {
         padding: 10px;
-        height: 150px; /* Keep the same height as desktop */
+        height: 100px;
+    }
+    
+    .flatpickr-day {
+        max-width: 22px !important;
+        height: 22px !important;
+        line-height: 22px !important;
     }
 } 
