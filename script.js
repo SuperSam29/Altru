@@ -1,12 +1,12 @@
 // Array of properties with their iCal URLs
 const properties = [
-    {
-        name: "Oasis",
-        icalUrl: "https://www.airbnb.com/calendar/ical/51847892.ics?s=c6e479198e23576a1c31c0a134951c87"
+    { 
+        name: "Oasis", 
+        icalUrl: "https://www.airbnb.co.uk/calendar/ical/1194779357845731963.ics?s=ca2a7532c96d1edb8cb1a49c80862fd1" 
     },
-    {
-        name: "Elio",
-        icalUrl: "https://www.airbnb.com/calendar/ical/51848269.ics?s=c6e479198e23576a1c31c0a134951c87"
+    { 
+        name: "Elio", 
+        icalUrl: "https://www.airbnb.co.uk/calendar/ical/1334655061299011571.ics?s=db782cbedab27f01e32b87423a50e35b" 
     }
 ];
 
