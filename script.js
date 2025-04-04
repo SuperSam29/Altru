@@ -12,10 +12,11 @@ const properties = [
 
 // URL to our server-side proxy for fetching iCal data
 const PROXY_URLS = [
+    "https://altru-hjayawz3a-bpps-projects-d47b6e50.vercel.app/ical?url=",
+    "https://altru-hjayawz3a-bpps-projects-d47b6e50.vercel.app/api/fetch-ical?url=",
     "https://api.allorigins.win/raw?url=", 
     "https://cors-anywhere.herokuapp.com/", 
-    "https://proxy.cors.sh/",
-    "https://altru-q6ed5i0qn-bpps-projects-d47b6e50.vercel.app/ical?url="
+    "https://proxy.cors.sh/"
 ];
 
 // DOM elements
@@ -313,45 +314,66 @@ async function checkPropertyAvailability(property, start, end) {
                     continue; // Try next proxy
                 }
                 
-                const icalText = await response.text();
-                console.log(`Successfully fetched real iCal data for ${property.name}`);
-                
-                // Parse the iCal data
                 let events = [];
                 
-                if (isICALLoaded) {
-                    // Use ical.js if available
-                    try {
-                        const jcalData = ICAL.parse(icalText);
-                        const comp = new ICAL.Component(jcalData);
-                        const icalEvents = comp.getAllSubcomponents("vevent");
+                // Check if the response is JSON (from our /api/fetch-ical endpoint)
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    // This is our new API endpoint that returns parsed data
+                    const jsonData = await response.json();
+                    
+                    if (jsonData.blockedDates && Array.isArray(jsonData.blockedDates)) {
+                        console.log(`Successfully fetched parsed iCal data for ${property.name}`);
                         
-                        // Convert to our simplified format
-                        for (const event of icalEvents) {
-                            try {
-                                const icalEvent = new ICAL.Event(event);
-                                
-                                if (icalEvent.startDate && icalEvent.endDate) {
-                                    events.push({
-                                        startDate: icalEvent.startDate.toJSDate(),
-                                        endDate: icalEvent.endDate.toJSDate()
-                                    });
-                                }
-                            } catch (eventError) {
-                                console.error("Error processing event:", eventError);
-                            }
-                        }
-                    } catch (parseError) {
-                        console.error("Error parsing with ICAL.js:", parseError);
-                        // Fallback to simple parser
-                        events = parseICalSimple(icalText);
+                        // Convert the blocked dates to our format
+                        events = jsonData.blockedDates.map(dateRange => ({
+                            startDate: new Date(dateRange.start),
+                            endDate: new Date(dateRange.end)
+                        }));
+                    } else {
+                        console.error(`Invalid JSON response from proxy ${i+1}`);
+                        continue; // Try next proxy
                     }
                 } else {
-                    // Use simple parser
-                    events = parseICalSimple(icalText);
+                    // This is a regular iCal text response
+                    const icalText = await response.text();
+                    console.log(`Successfully fetched real iCal data for ${property.name}`);
+                    
+                    // Parse the iCal data
+                    if (isICALLoaded) {
+                        // Use ical.js if available
+                        try {
+                            const jcalData = ICAL.parse(icalText);
+                            const comp = new ICAL.Component(jcalData);
+                            const icalEvents = comp.getAllSubcomponents("vevent");
+                            
+                            // Convert to our simplified format
+                            for (const event of icalEvents) {
+                                try {
+                                    const icalEvent = new ICAL.Event(event);
+                                    
+                                    if (icalEvent.startDate && icalEvent.endDate) {
+                                        events.push({
+                                            startDate: icalEvent.startDate.toJSDate(),
+                                            endDate: icalEvent.endDate.toJSDate()
+                                        });
+                                    }
+                                } catch (eventError) {
+                                    console.error("Error processing event:", eventError);
+                                }
+                            }
+                        } catch (parseError) {
+                            console.error("Error parsing with ICAL.js:", parseError);
+                            // Fallback to simple parser
+                            events = parseICalSimple(icalText);
+                        }
+                    } else {
+                        // Use simple parser
+                        events = parseICalSimple(icalText);
+                    }
                 }
                 
-                console.log(`Found ${events.length} real events for ${property.name}`);
+                console.log(`Found ${events.length} events for ${property.name}`);
                 
                 // Check if the requested date range overlaps with any booked periods
                 for (const event of events) {
@@ -372,7 +394,7 @@ async function checkPropertyAvailability(property, start, end) {
                 }
                 
                 // If we get here, there are no conflicting bookings
-                console.log(`${property.name} is available for the selected dates (based on real data)`);
+                console.log(`${property.name} is available for the selected dates`);
                 return true;
             } catch (fetchError) {
                 console.error(`Error with proxy ${i+1} for ${property.name}: ${fetchError.message}`);
@@ -390,13 +412,11 @@ async function checkPropertyAvailability(property, start, end) {
             console.error(`Direct request failed for ${property.name}: ${directError.message}`);
         }
         
-        // All methods failed
-        console.log(`All methods failed for ${property.name}, assuming available`);
-        return true; // If all attempts fail, assume property is available
+        console.error(`All fetching methods failed for ${property.name}`);
+        return false; // Default to unavailable if all methods fail
     } catch (error) {
-        console.error(`Error checking availability for ${property.name}:`, error);
-        // Return true as fallback - all properties will show as available
-        return true;
+        console.error(`Unexpected error checking availability for ${property.name}:`, error);
+        return false;
     }
 }
 
