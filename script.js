@@ -12,8 +12,8 @@ const properties = [
 
 // URL to our server-side proxy for fetching iCal data
 const PROXY_URLS = [
-    "https://altru-hjayawz3a-bpps-projects-d47b6e50.vercel.app/ical?url=",
-    "https://altru-hjayawz3a-bpps-projects-d47b6e50.vercel.app/api/fetch-ical?url=",
+    "https://altru-50f3qdkct-bpps-projects-d47b6e50.vercel.app/api/fetch-ical?url=",
+    "https://altru-50f3qdkct-bpps-projects-d47b6e50.vercel.app/ical?url=",
     "https://api.allorigins.win/raw?url=", 
     "https://cors-anywhere.herokuapp.com/", 
     "https://proxy.cors.sh/"
